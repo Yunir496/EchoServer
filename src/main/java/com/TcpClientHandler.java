@@ -1,9 +1,12 @@
 package com;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.net.*;
 
 public class TcpClientHandler implements Runnable {
+    private static final Logger logger = LoggerFactory.getLogger(TcpClientHandler.class);
     private final Socket clientSocket;
 
     public TcpClientHandler(Socket socket) {
@@ -14,7 +17,7 @@ public class TcpClientHandler implements Runnable {
     public void run() {
         // Логируем подключение клиента
         String clientAddress = clientSocket.getInetAddress().getHostAddress() + ":" + clientSocket.getPort();
-        System.out.println("TCP: Client connected: " + clientAddress);
+        logger.info("TCP: Client connected: {}", clientAddress);
 
         try (InputStream input = clientSocket.getInputStream();
              OutputStream output = clientSocket.getOutputStream()) {
@@ -25,16 +28,16 @@ public class TcpClientHandler implements Runnable {
             while ((bytesRead = input.read(buffer)) != -1) {
                 output.write(buffer, 0, bytesRead);
                 output.flush();
-                System.out.println("TCP: Echoed " + bytesRead + " bytes to " + clientAddress);
+                logger.debug("TCP: Echoed {} bytes to {}", bytesRead, clientAddress);
             }
         } catch (IOException e) {
-            System.err.println("TCP: Client handling error for " + clientAddress + ": " + e.getMessage());
+            logger.error("TCP: Client handling error for {}", clientAddress, e);
         } finally {
             try {
                 clientSocket.close();
-                System.out.println("TCP: Client disconnected: " + clientAddress);
+                logger.info("TCP: Client disconnected: {}", clientAddress);
             } catch (IOException e) {
-                System.err.println("TCP: Error closing client socket: " + e.getMessage());
+                logger.error("TCP: Error closing client socket", e);
             }
         }
     }

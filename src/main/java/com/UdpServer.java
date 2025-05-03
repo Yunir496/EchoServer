@@ -1,9 +1,12 @@
 package com;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.net.*;
 
 public class UdpServer {
+    private static final Logger logger = LoggerFactory.getLogger(UdpServer.class);
     private final int port;
 
     public UdpServer(int port) {
@@ -12,7 +15,7 @@ public class UdpServer {
 
     public void start() {
         try (DatagramSocket udpSocket = new DatagramSocket(port)) {
-            System.out.println("UDP Echo Server started on 127.0.0.1:" + port);
+            logger.info("UDP Echo Server started on 127.0.0.1:{}", port);
             byte[] buffer = new byte[1024];
 
             while (Main.isRunning()) {
@@ -22,7 +25,7 @@ public class UdpServer {
 
                     // Логируем отправителя
                     String clientAddress = packet.getAddress().getHostAddress() + ":" + packet.getPort();
-                    System.out.println("UDP: Received packet from " + clientAddress + ", length: " + packet.getLength());
+                    logger.info("UDP: Received packet from {}, length: {}", clientAddress, packet.getLength());
 
                     // Отправляем данные обратно
                     DatagramPacket response = new DatagramPacket(
@@ -32,18 +35,18 @@ public class UdpServer {
                             packet.getPort()
                     );
                     udpSocket.send(response);
-                    System.out.println("UDP: Sent response to " + clientAddress);
+                    logger.debug("UDP: Sent response to {}", clientAddress);
 
                 } catch (IOException e) {
                     if (!Main.isRunning()) {
                         break;
                     }
-                    System.err.println("UDP: Error handling packet: " + e.getMessage());
+                    logger.error("UDP: Error handling packet", e);
                 }
             }
         } catch (IOException e) {
-            System.err.println("UDP Server error: " + e.getMessage());
+            logger.error("UDP Server error", e);
         }
-        System.out.println("UDP Server stopped");
+        logger.info("UDP Server stopped");
     }
 }

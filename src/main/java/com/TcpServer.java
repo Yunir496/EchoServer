@@ -1,9 +1,12 @@
 package com;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.net.*;
 
 public class TcpServer {
+    private static final Logger logger = LoggerFactory.getLogger(TcpServer.class);
     private final int port;
 
     public TcpServer(int port) {
@@ -12,23 +15,24 @@ public class TcpServer {
 
     public void start() {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
-            System.out.println("TCP Echo Server started on 127.0.0.1:" + port);
+            logger.info("TCP Echo Server started on 127.0.0.1:{}", port);
 
             while (Main.isRunning()) {
                 try {
                     Socket clientSocket = serverSocket.accept();
+                    logger.debug("TCP: New client connection accepted");
                     // Запускаем обработчик клиента в новом потоке
                     new Thread(new TcpClientHandler(clientSocket)).start();
                 } catch (IOException e) {
                     if (!Main.isRunning()) {
                         break;
                     }
-                    System.err.println("TCP: Error accepting client connection: " + e.getMessage());
+                    logger.error("TCP: Error accepting client connection", e);
                 }
             }
         } catch (IOException e) {
-            System.err.println("TCP Server error: " + e.getMessage());
+            logger.error("TCP Server error", e);
         }
-        System.out.println("TCP Server stopped");
+        logger.info("TCP Server stopped");
     }
 }
